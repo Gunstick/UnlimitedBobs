@@ -1,0 +1,96 @@
+CLS
+SOUND 1,10,#1603
+SOUND 2,10,#1604
+SOUND 3,15,#797    !#1601
+WAVE 7,7,14,50
+oldfree%=FRE(0)
+physbase%=XBIOS(2)
+logbase%=XBIOS(3)
+rez%=XBIOS(4)
+IF rez%=0
+  xmax%=320
+  ymax%=200
+ELSE
+  IF rez%=1
+    xmax%=640
+    ymax%=200
+  ELSE
+    xmax%=640
+    ymax%=400
+  ENDIF
+ENDIF
+maxscreen%=7
+big%=xmax%/20
+IF oldfree%-10000-32000*maxscreen%<0
+  ALERT 1,"No memory",1,"Bl”””",a%
+  EDIT
+ENDIF
+COLOR 0
+COLOR 1
+PBOX 1,1,big%-1,big%-1
+READ x%,y%
+PLOT x%,y%
+COLOR 0
+DO
+  READ x%,y%
+  EXIT IF x%=-1 AND y%=-1
+  IF x%=-1 AND y%=0
+    READ x%,y%
+    PLOT x%,y%
+  ELSE
+    DRAW  TO x%,y%
+  ENDIF
+LOOP
+DATA 4,4,4,10,9,10,10,9,-1,0
+DATA 12,4,12,10,20,10,-1,0
+DATA 14,4,16,4,18,7,20,4,22,4,22,10,-1,0
+DATA -1,-1,-1,-1,-1,-1
+COLOR 1
+GET 0,0,big%,big%,bob$
+PRINT CHR$(27);"v";
+FOR i%=1 TO 50
+  PRINT "  10000 Bobs by Gunstick from U.L.M.    ";
+NEXT i%
+GET 0,0,xmax%-1,ymax%-8,a$
+DIM adress%(maxscreen%,1)
+RESERVE 10000
+a%=(HIMEM+255) AND &HFFFFFF00
+FOR i%=0 TO maxscreen%
+  adress%(i%,0)=a%   ! physbase
+  ADD a%,32000
+  adress%(i%,1)=a%    !logbase (one screen before logbase)
+NEXT i%
+adress%(maxscreen%,1)=(HIMEM+255) AND &HFFFFFF00
+IF rez%=2
+  kak%=2
+ELSE
+  kak%=1
+ENDIF
+DEFTEXT 1,1,1,4
+FOR i%=0 TO maxscreen%
+  VOID XBIOS(5,L:adress%(i%,1),L:-1,-1)
+  CLS
+  PUT 0,-i%*kak%,a$,3
+  PUT 0,(16-i%)*kak%,a$,3
+  TEXT 0,ymax%-8," Unlimited Matricks 6.2.1990 "
+NEXT i%
+ADD a,0.005
+a=0
+xmid%=xmax%/2-big%/2
+ymid%=ymax%/2-big%
+xmaxt%=xmax%/5
+ymaxt%=ymax%/5
+DO
+  FOR i%=0 TO maxscreen%
+    VSYNC
+    VOID XBIOS(5,L:adress%(i%,1),L:adress%(i%,0),-1)
+    ADD a,0.00001
+    x%=SIN(a*979)*SIN(a*879)*xmid%+xmid%
+    y%=(SIN(a*573+PI/4)*COS(a*877))*ymid%+ymid%
+    PUT x%,y%,bob$,3   !15       !12          !7
+    EXIT IF MOUSEK
+  NEXT i%
+  EXIT IF MOUSEK
+LOOP
+RESERVE oldfree%-100000
+VOID XBIOS(5,L:logbase%,L:physbase%,-1)
